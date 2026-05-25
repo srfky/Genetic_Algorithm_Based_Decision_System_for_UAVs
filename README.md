@@ -32,23 +32,56 @@ Bu proje; İnsansız Hava Araçları (UAV) ve İnsansız Kara Araçlarının (UG
     └── 📄 ugv_commands_code.py         # Koordinat tabanlı otonom sürüş ve motor kontrol sistemi
 ```
   
-🛠️ ## Modüler Teknik Mimari
+## 🛠️ Modüler Teknik Mimari
 ### 1.Hava Analizi & Taktiksel Haritalandırma (AutonomousTaskCodes)
 **Frame_capture.py:** İHA alt kamera videosundan (video.mp4) seconds_between_frames = 3 parametresiyle kareleri yakalar. Hızlı ileri sarma (CAP_PROP_POS_FRAMES) özelliğiyle büyük video dosyalarında performansı artırır, görüntüleri işlem optimizasyonu için 640x480 çözünürlüğünde standartlaştırır.
+
+
+<p align="center"><img width="400" height="300" alt="247052e1-18fc-4c79-b1ea-99777fb8b698" src="https://github.com/user-attachments/assets/92988302-d72d-40b8-befa-de520d340ace" /></p>
+
+<p align="center"> Raspberry Pi, LoRa ve Kamera görüntüsü </p>
+
 
 **Images_merge.py:** Sıralı kareleri ORB öznitelik algılayıcı ve RANSAC tabanlı Homografi matrisi kullanarak zincirleme şekilde birleştirir. Katmanlı bindirme ve otomatik kırpma uygulayarak geniş araziler için kayıpsız bir panoramik harita (merged_image.jpg) üretir.
 
 **Autonomous_task_codes.ipynb - YOLO Segmentasyon & Akıllı Rota (A Star):** Üretilen haritayı Yol (0), Engel (1), Dost (2), Düşman (3) olarak sınıflandırır. 50 piksel yarıçapında dostların etrafına güvenli koridor, düşmanların etrafına risk bariyerleri tanımlar. Haritayı 4 kat küçülterek dinamik maliyet fonksiyonlu A* algoritmasıyla en güvenli taktiksel rotayı çizer.
+
+<img width="902" height="517" alt="fce069ce-f23f-4489-94ff-01e50486c51d" src="https://github.com/user-attachments/assets/60ec32c6-6517-449b-b64d-922190dd9373" />
+ <p align="center"> Segmentasyon Çıktısı </p>
+
+
+<p align="center">
+  <img src="https://github.com/user-attachments/assets/4755938d-9f56-4ef0-9e2e-05ef5c0c0616" width="45%" />
+  <img src="https://github.com/user-attachments/assets/a17ed8bf-c1b1-4011-aac2-c6b2daee5df6" width="45%" />
+</p>
+
+<p align="center">
+Etki Alanı Çıktısı
+</p>
 
 ### 2.Havadan Karaya Kablosuz Komut Linki (LoRa)
 **Sender_UAV.py:** İHA üzerindeki Raspberry Pi 4B ve SX126X LoRa donanımını kontrol eder. GPIO 22 (M0) ve GPIO 27 (M1) pinleriyle mod yönetimini gerçekleştirerek taktiksel rotayı ve otonom tetikleme komutunu 22dBm (160 mW) yüksek güçle 868 MHz bandından yayınlar. get_channel_rssi ile ortam gürültü tabanını (Noise RSSI) anlık ölçer.
 
 **Receiver_UGV.py:** Kara aracında (UGV) konumlanan alıcı modüldür. İHA'dan gelen RUN_UGV_COMMANDS_CODE_PY tetiğini yakaladığı an alt süreç (subprocess.run) başlatarak yerdeki otonom navigasyon kodunu tetikler ve telemetri durumunu LoRa üzerinden geri raporlar.
 
-### 3. Simülasyon & Hava Seyrüseferi (UAVCodes)
+<p align="center">   <img width="600" height="522" alt="701ba685-8c64-45eb-92a9-2cab36816e66" src="https://github.com/user-attachments/assets/bf239da2-45e3-42b3-8a51-df9d6a268055" />
+</p>
+
+<p align="center">
+Raspberry Pi ve LoRa Entegreleri
+</p>
+
+### 3. Simülasyon (UAVCodes)
 **Autonomous_flying.py:** MAVSDK kütüphanesi kullanarak asyncio (asenkron) mimaride Gazebo SITL simülasyonundaki İHA'yı kontrol eder. GPS sağlığı, otomatik kalkış, 10 metrelik irtifa takibi, çoklu görev kontrol noktası (waypoint) yönetimi ve dikey kalkıştan sabit kanat (Fixed-Wing) moduna dinamik geçiş testlerini yürütür.
 
 **standard_vtol:** Hava aracının kanat açıklığı, kaldırma ve sürüklenmesi gibi aerodinamik katsayılarını ve motor eklentilerinin otopilot (PX4) ile eşleşmesini içeren fiziksel simülasyon gövde modelidir.
+
+<p align="center">
+<img width="959" height="482" alt="a76da5cb-d32f-4558-8499-53c9bedda9fb" src="https://github.com/user-attachments/assets/95768c08-a267-4116-886a-fc7593a2c8f1" /></p> 
+
+<p align="center">
+Gazebo Simülasyon Görüntüsü
+</p>
 
 ### 4. Kara Aracı Navigasyon & Kontrol (UGVCodes)
 **Lane_Detection_and_Tracking.py:** Klasik görüntü işleme teknikleriyle (Gaussian Blur, Canny Edge, ROI maskeleme ve Hough Transform) yol şeritlerini gerçek zamanlı filtreler, algılar ve robotik navigasyon için temel şerit takip altyapısını oluşturur.
